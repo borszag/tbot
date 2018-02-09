@@ -13,7 +13,7 @@
 
 #define FPNUM 1 		// megvalósított funkciók száma
 
-union indef_param		// adatszerkezet, amelyen keresztül egységesíthetőek a függvényhívások
+union unified_param		// adatszerkezet, amelyen keresztül egységesíthetőek a függvényhívások
 {
 	int 	 *i;
 	int 	**ia;
@@ -56,39 +56,39 @@ int login()				// a szerrverre, illetve az adott csatornába beléptető függv�
 -*	A bot által végezhető feladatokhoz tartozó függvények,
 -*	előbb ami felismer, aztán ami végrehajt.
  */
-int isping(char *msg, unsigned msi)
+int s_ping(char *msg, unsigned msi)
 {
 	return !strncmp(msg, "PING :", 6);
 }
 
-int doping(char *msg, unsigned msi, union indef_param ipa)
+int e_ping(char *msg, unsigned msi, union unified_param up)
 {
 	int ret;
 	msg[1] = 'O';
-	ret = send(*(ipa.i), msg, msi, 0);
+	ret = send(*(up.i), msg, msi, 0);
 	msg[1] = 'I';
 	return ret;
 }
 
 int main(void)
 {
-	int i, sockfd, numbytes;
+	int i, sockfd, ret_size;
 	char buffer[MAXDATASIZE];
-	int (*scan[FPNUM])(char *, unsigned) = {isping};
-	int (*exec[FPNUM])(char *, unsigned, union indef_param) = {doping};
-	union indef_param param[FPNUM] = {{.i = &sockfd}};
+	int (*scan[FPNUM])(char *, unsigned) = {s_ping};
+	int (*exec[FPNUM])(char *, unsigned, union unified_param) = {e_ping};
+	union unified_param param[FPNUM] = {{.i = &sockfd}};
 
 	sockfd = login();
 	while(1)
 	{
-		numbytes=recv(sockfd, buffer, MAXDATASIZE-1, 0);
-		buffer[numbytes] = '\0';
+		ret_size=recv(sockfd, buffer, MAXDATASIZE-1, 0);
+		buffer[ret_size] = '\0';
 		printf("%s", buffer);
 		for (i = 0; i < FPNUM; ++i)
 		{
-			if((*scan[i])(buffer, numbytes))
+			if((*scan[i])(buffer, ret_size))
 			{
-				(*exec[i])(buffer, numbytes, param[i]);
+				(*exec[i])(buffer, ret_size, param[i]);
 			}
 		}
 	}
