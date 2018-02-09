@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 
 #define PORT 6667 		// port used to connect to the irc server
-
 #define MAXDATASIZE 513 // the maximal size of messages recieved from the server
-
 #define FPNUM 1 		// number of functions in main scan-exec loop
 
 union unified_param		// used to unify the parameter list of exec functions
@@ -22,20 +18,15 @@ union unified_param		// used to unify the parameter list of exec functions
 
 int login()				// it connects the bot to the server and joins it into a channel
 {
-	int sockfd, len;
+	int len, sockfd = socket(PF_INET, SOCK_STREAM, 0);
 	char buffer[MAXDATASIZE];
-	struct hostent *he;
 	struct sockaddr_in addr; 
-
-	he=gethostbyname("irc.quakenet.org");
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
+	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET; 
 	addr.sin_port = htons(PORT);
-	addr.sin_addr = *((struct in_addr *)he->h_addr);
-	memset(&(addr.sin_zero), '\0', 8);
+	addr.sin_addr.s_addr = inet_addr("83.140.172.212");
 
-	connect(sockfd, (struct sockaddr *)&addr,sizeof(struct sockaddr));
+	connect(sockfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
 	sleep(5);
 
 	send(sockfd, "NICK tbot\r\n", 11, 0);
