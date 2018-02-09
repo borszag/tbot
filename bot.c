@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
 #include <netdb.h>
 #include <sys/types.h>
@@ -28,59 +27,29 @@ int login()				// a szerrverre, illetve az adott csatornába beléptető függv�
 	struct hostent *he;
 	struct sockaddr_in addr; // a csatlakozó címinformációja
 
-	if ((he=gethostbyname("irc.quakenet.org")) == NULL) {
-		perror("gethostbyname");
-		exit(1);
-	}
-
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		perror("socket");
-		exit(1);
-	}
+	he=gethostbyname("irc.quakenet.org");
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	addr.sin_family = AF_INET; // host byte order
 	addr.sin_port = htons(PORT);
 	addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(addr.sin_zero), '\0', 8);
 
-	if (connect(sockfd, (struct sockaddr *)&addr,sizeof(struct sockaddr)) == -1) {
-		perror("connect");
-		exit(1);
-	}
-
+	connect(sockfd, (struct sockaddr *)&addr,sizeof(struct sockaddr));
 	sleep(5);
 
-	if (send(sockfd, "NICK tbot\r\n", 11, 0) == -1) {
-		perror("send");
-		exit(1);
-	}
-	if (send(sockfd, "USER tbot 8 *  : tbot\r\n", 23, 0) == -1) {
-		perror("send");
-		exit(1);
-	}
-
+	send(sockfd, "NICK tbot\r\n", 11, 0);
+	send(sockfd, "USER tbot 8 *  : tbot\r\n", 23, 0);
 	do
 	{
-		if ((len = recv(sockfd, buffer, MAXDATASIZE-1, 0)) == -1) {
-			perror("recv");
-			exit(1);
-		}
-
-	}while(strncmp(buffer, "PING :", 6) != 0);
+		len = recv(sockfd, buffer, MAXDATASIZE-1, 0);
+	} while(strncmp(buffer, "PING :", 6) != 0);
 
 	buffer[1] = 'O';
 
-	if (send(sockfd, buffer, len, 0) == -1) {
-		perror("send");
-		exit(1);
-	}
+	send(sockfd, buffer, len, 0);
 	sleep(15);
-
-	if (send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1) {
-		perror("send");
-		exit(1);
-	}
-
+	send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1;
 	return sockfd;
 }
 /*
@@ -98,11 +67,6 @@ int doping(char *msg, unsigned msi, union indef_param ipa)
 	msg[1] = 'O';
 	ret = send(*(ipa.i), msg, msi, 0);
 	msg[1] = 'I';
-	if (ret == -1)
-	{
-		perror("send");
-		exit(1);
-	}
 	return ret;
 }
 
@@ -117,10 +81,7 @@ int main(void)
 	sockfd = login();
 	while(1)
 	{
-		if ((numbytes=recv(sockfd, buffer, MAXDATASIZE-1, 0)) == -1) {
-			perror("recv");
-			exit(1);
-		}
+		numbytes=recv(sockfd, buffer, MAXDATASIZE-1, 0);
 		buffer[numbytes] = '\0';
 		printf("%s", buffer);
 		for (i = 0; i < FPNUM; ++i)
@@ -130,10 +91,7 @@ int main(void)
 				(*exec[i])(buffer, numbytes, param[i]);
 			}
 		}
-
 	}
-
-	close(sockfd);
-
+	shutdown(sockfd, SHUT_RDWR);
 	return 0;
 }
