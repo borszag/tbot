@@ -7,30 +7,30 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#define PORT 6667 		// az a port, ahova a kliens csatlakozni fog
+#define PORT 6667 		// port used to connect to the irc server
 
-#define MAXDATASIZE 513 // az egyszerre kapható bájtok maximális értéke
+#define MAXDATASIZE 513 // the maximal size of messages recieved from the server
 
-#define FPNUM 1 		// megvalósított funkciók száma
+#define FPNUM 1 		// number of functions in main scan-exec loop
 
-union unified_param		// adatszerkezet, amelyen keresztül egységesíthetőek a függvényhívások
+union unified_param		// used to unify the parameter list of exec functions
 {
 	int 	 *i;
 	int 	**ia;
 	char 	**c;
 };
 
-int login()				// a szerrverre, illetve az adott csatornába beléptető függvény
+int login()				// it connects the bot to the server and joins it into a channel
 {
 	int sockfd, len;
 	char buffer[MAXDATASIZE];
 	struct hostent *he;
-	struct sockaddr_in addr; // a csatlakozó címinformációja
+	struct sockaddr_in addr; 
 
 	he=gethostbyname("irc.quakenet.org");
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	addr.sin_family = AF_INET; // host byte order
+	addr.sin_family = AF_INET; 
 	addr.sin_port = htons(PORT);
 	addr.sin_addr = *((struct in_addr *)he->h_addr);
 	memset(&(addr.sin_zero), '\0', 8);
@@ -52,10 +52,12 @@ int login()				// a szerrverre, illetve az adott csatornába beléptető függv�
 	send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1;
 	return sockfd;
 }
-/*
--*	A bot által végezhető feladatokhoz tartozó függvények,
--*	előbb ami felismer, aztán ami végrehajt.
- */
+/*/
+-*-----------------------------------------------------
+-* All scan-exec functions are implemented after this mark
+-* Naming convention: scan functions begin with s_ prefix, while exec ones with e_
+-*-----------------------------------------------------
+/*/
 int s_ping(char *msg, unsigned msi)
 {
 	return !strncmp(msg, "PING :", 6);
