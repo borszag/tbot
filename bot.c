@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -18,7 +19,7 @@ union unified_param		// used to unify the parameter list of exec functions
 
 int login()				// it connects the bot to the server and joins it into a channel
 {
-	int len, sockfd = socket(PF_INET, SOCK_STREAM, 0);
+	int len, sockfd;
 	char buffer[MAXDATASIZE];
 	struct sockaddr_in addr; 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
@@ -26,21 +27,48 @@ int login()				// it connects the bot to the server and joins it into a channel
 	addr.sin_port = htons(PORT);
 	addr.sin_addr.s_addr = inet_addr("83.140.172.212");
 
-	connect(sockfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+	{
+		perror("Login failed during socket creation");
+		exit(1);
+	}
+	if (connect(sockfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == -1)
+	{
+		perror("Login failed during connection to the server");
+		exit(1);
+	}
 	sleep(5);
-
-	send(sockfd, "NICK tbot\r\n", 11, 0);
-	send(sockfd, "USER tbot 8 *  : tbot\r\n", 23, 0);
+	if (send(sockfd, "NICK tbot\r\n", 11, 0) == -1)
+	{
+		perror("Login failed due to communication issues");
+		exit(1);
+	}
+	if (send(sockfd, "USER tbot 8 *  : tbot\r\n", 23, 0) == -1)
+	{
+		perror("Login failed due to communication issues");
+		exit(1);
+	}
 	do
 	{
-		len = recv(sockfd, buffer, MAXDATASIZE-1, 0);
-	} while(strncmp(buffer, "PING :", 6) != 0);
-
+		if ((len = recv(sockfd, buffer, MAXDATASIZE-1, 0)) == -1)
+		{
+		perror("Login failed due to communication issues");
+		exit(1);
+		}
+	}
+	while(strncmp(buffer, "PING :", 6) != 0);
 	buffer[1] = 'O';
-
-	send(sockfd, buffer, len, 0);
+	if (send(sockfd, buffer, len, 0) == -1)
+	{
+		perror("Login failed due to communication issues");
+		exit(1);
+	}
 	sleep(15);
-	send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1;
+	if (send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1)
+	{
+		perror("Login failed due to communication issues");
+		exit(1);
+	}
 	return sockfd;
 }
 /*/
