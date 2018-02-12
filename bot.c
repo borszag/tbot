@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -16,31 +15,40 @@ union unified_param		// used to unify the parameter list of exec functions
 	char 	**c;
 };
 
-int login()				// it connects the bot to the server and joins it into a channel
+int login(const char *server_ip, const char *bot_name, const char *channel_name)				// it connects the bot to the server and joins it into a channel
 {
 	int len, sockfd = socket(PF_INET, SOCK_STREAM, 0);
-	char buffer[MAXDATASIZE];
+	char *token, buffer[MAXDATASIZE];
 	struct sockaddr_in addr; 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET; 
 	addr.sin_port = htons(PORT);
-	addr.sin_addr.s_addr = inet_addr("83.140.172.212");
+	addr.sin_addr.s_addr = inet_addr(server_ip);
 
 	connect(sockfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
-	sleep(5);
-
-	send(sockfd, "NICK tbot\r\n", 11, 0);
-	send(sockfd, "USER tbot 8 *  : tbot\r\n", 23, 0);
+	recv(sockfd, buffer, MAXDATASIZE-1, 0);
+	len = sprintf(buffer, "NICK %s\r\n", bot_name);
+	send(sockfd, buffer, len, 0);
+	len = sprintf(buffer, "USER %s 8 *  : %s\r\n", bot_name, bot_name);
+	send(sockfd, buffer, len, 0);
 	do
 	{
 		len = recv(sockfd, buffer, MAXDATASIZE-1, 0);
-	} while(strncmp(buffer, "PING :", 6) != 0);
-
+		buffer[len] = 0;
+	}
+	while(strncmp(buffer, "PING :", 6) != 0);
 	buffer[1] = 'O';
 
 	send(sockfd, buffer, len, 0);
-	sleep(15);
-	send(sockfd, "JOIN #konolytalan\r\n", 20, 0) == -1;
+	do
+	{
+		len = recv(sockfd, buffer, MAXDATASIZE-1, 0);
+		buffer[len] = 0;
+		token = strchr(buffer, ' ');
+	}
+	while(strncmp(token, " 376", 4) != 0);
+	len = sprintf(buffer, "JOIN %s\r\n", channel_name);
+	send(sockfd, buffer, len, 0);
 	return sockfd;
 }
 /*/
@@ -71,7 +79,7 @@ int main(void)
 	int (*exec[FPNUM])(char *, unsigned, union unified_param) = {e_ping};
 	union unified_param param[FPNUM] = {{.i = &sockfd}};
 
-	sockfd = login();
+	sockfd = login("83.140.172.212", "tbot", "#konolytalan");
 	while(1)
 	{
 		ret_size=recv(sockfd, buffer, MAXDATASIZE-1, 0);
