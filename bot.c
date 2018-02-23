@@ -15,6 +15,13 @@ union unified_param		// used to unify the parameter list of exec functions
 	char 	**c;
 };
 
+struct function
+{
+	union unified_param param;
+	int (*scan)(char *, unsigned);
+	int (*exec)(char *, unsigned, union unified_param);
+};
+
 int login(const char *server_ip, const char *bot_name, const char *channel_name)				// it connects the bot to the server and joins it into a channel
 {
 	int len, sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -75,9 +82,10 @@ int main(void)
 {
 	int i, sockfd, ret_size;
 	char buffer[MAXDATASIZE];
-	int (*scan[FPNUM])(char *, unsigned) = {s_ping};
-	int (*exec[FPNUM])(char *, unsigned, union unified_param) = {e_ping};
-	union unified_param param[FPNUM] = {{.i = &sockfd}};
+
+	struct function functions[FPNUM] = {
+		{.param.i = &sockfd, .scan = s_ping, .exec = e_ping} /*Function resoinding to the PINGs of the server.*/
+	};
 
 	sockfd = login("83.140.172.212", "tbot", "#konolytalan");
 	while(1)
@@ -87,9 +95,9 @@ int main(void)
 		printf("%s", buffer);
 		for (i = 0; i < FPNUM; ++i)
 		{
-			if((*scan[i])(buffer, ret_size))
+			if(functions[i].scan(buffer, ret_size))
 			{
-				(*exec[i])(buffer, ret_size, param[i]);
+				functions[i].exec(buffer, ret_size, functions[i].param);
 			}
 		}
 	}
