@@ -52,7 +52,6 @@ int bot_read(int sockfd, struct message *msg)
 	char *end;
 
 	bot_raw_read(sockfd, rawmsg);
-	printf("%s", rawmsg);
 	if (rawpos[0] == ':') 																			// the message has a prefix
 	{
 		rawpos += 1;
@@ -83,8 +82,6 @@ int bot_read(int sockfd, struct message *msg)
 		end[0] = 0;
 		strcpy(msg->param, rawpos);
 	}
-
-	printf(" PREFIX:%s\nCOMMAND:%s\n PARAMS:%s\n\n", msg->prefix,msg->command,msg->param);
 	return 0;
 }
 
@@ -100,14 +97,13 @@ int bot_send(int sockfd, struct message *msg)
 	int len;
 	char rawmsg[MAXMSGSIZE+1];
 	len = sprintf(rawmsg, "%s %s\r\n", msg->command, msg->param);
-	printf("%s\n", rawmsg);
 	return send(sockfd, rawmsg, len, 0);
 }
 
 /*
 Connects the bot to the given channel on the specified server.
 */
-int bot_login(const char *server_ip, const char *bot_name, const char *channel_name)
+int bot_login(const char *server_ip, const char *channel_name, const char *bot_name)
 {
 	int len, sockfd = socket(PF_INET, SOCK_STREAM, 0);												// initializing communication
 	char *token, msg[MAXMSGSIZE+1];

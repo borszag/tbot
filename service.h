@@ -9,10 +9,11 @@ seek functions should return a boolean, a nonzero value if that service needs to
 #ifndef SERVICE_H
 #define SERVICE_H 
 
+#include <stdio.h>
+#include <string.h>
 #include "irc.h"
 
-#define SERVICECOUNT 1 		// number of functions in main seek-serv loop
-
+#define SERVICECOUNT 2 		// number of functions in main seek-serv loop
 
 /*
 The purpose of this is to unify the parameter list of the seek-serv functions.
@@ -23,8 +24,7 @@ larger than that for performance reasons.
 union unified_param
 {
 	int sockfd;
-	char *bot_name;
-	char *channel_name;
+	char *name;
 };
 
 struct service
@@ -43,5 +43,7 @@ Function declarations
 /*PING*/
 int seek_ping(struct message *, union unified_param);
 int serv_ping(struct message *, union unified_param);
-
+/*BOT_COMMAND*/
+int seek_bot_command(struct message *msg, union unified_param p);
+int serv_bot_command(struct message *msg, union unified_param p);
 #endif
