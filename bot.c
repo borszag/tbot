@@ -6,13 +6,13 @@ Example: Bot gets a PRIVMSG and the message contains some kind of command to exe
 #include "irc.h"
 #include "service.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	int i, sockfd, len;
 	char pre[512], com[512], par[512];
 	struct message msg = {.prefix = pre, .command = com, .param = par};
 
-	sockfd = bot_login("83.140.172.212", "tbot", "#konolytalan");
+	sockfd = bot_login(argv[1], argv[2], argv[3]);
 	
 	struct service services[SERVICECOUNT] = {
 		/*PING service*/
