@@ -23,13 +23,17 @@ larger than that for performance reasons.
 union unified_param
 {
 	int sockfd;
+	char *bot_name;
+	char *channel_name;
 };
 
 struct service
 {
-	union unified_param p;
-	int (*seek)(struct message *);
+	int (*seek)(struct message *, union unified_param);
+	union unified_param seek_param;
+
 	int (*serv)(struct message *, union unified_param);
+	union unified_param serv_param;
 };
 
 /*
@@ -37,7 +41,7 @@ Function declarations
 */
 
 /*PING*/
-int seek_ping(struct message *);
+int seek_ping(struct message *, union unified_param);
 int serv_ping(struct message *, union unified_param);
 
 #endif

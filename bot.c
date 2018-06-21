@@ -15,16 +15,22 @@ int main(void)
 	sockfd = bot_login("83.140.172.212", "tbot", "#konolytalan");
 	
 	struct service services[SERVICECOUNT] = {
-		{.p.sockfd = sockfd, .seek = seek_ping, .serv = serv_ping} /*Service responding to the PINGs of the server.*/
+		/*PING service*/
+		{
+			.seek = seek_ping,
+			.seek_param.sockfd = sockfd,
+			.serv = serv_ping,
+			.serv_param.sockfd = sockfd
+		}
 	};
 	while(1)
 	{
 		bot_read(sockfd, &msg);
 		for (i = 0; i < SERVICECOUNT; ++i)
 		{
-			if(services[i].seek(&msg))
+			if (services[i].seek(&msg, services[i].seek_param))
 			{
-				services[i].serv(&msg, services[i].p);
+				services[i].serv(&msg, services[i].serv_param);
 			}
 		}
 	}

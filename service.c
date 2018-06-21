@@ -5,7 +5,7 @@ PING
 This service responds the pings sent by the server.
 */
 
-int seek_ping(struct message *msg)
+int seek_ping(struct message *msg, union unified_param p)
 {
 	return !strcmp(msg->command, "PING");
 }
